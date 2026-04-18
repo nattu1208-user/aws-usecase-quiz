@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>AWS ユースケースクイズ</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FF9900">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AWSクイズ">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root{--primary:#FF9900;--correct:#059669;--wrong:#dc2626;--bg:#f1f5f9;--card:#ffffff;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;--aws-dark:#232f3e;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100%;max-width:520px;margin:0 auto;}
+.hd{background:var(--aws-dark);padding:10px 16px 8px;color:white;flex-shrink:0;}
+.hd-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.hd-title{font-size:0.78rem;font-weight:700;opacity:0.9;}
+.hd-title span{color:var(--primary);}
+.hd-qnum{font-size:0.85rem;font-weight:700;color:var(--primary);}
+.dots{display:flex;gap:4px;}
+.dot{width:22px;height:6px;border-radius:3px;background:rgba(255,255,255,0.2);transition:background 0.3s;}
+.dot.done-ok{background:#6ee7b7;}.dot.done-ng{background:#fca5a5;}.dot.current{background:var(--primary);}
+main{flex:1;display:flex;flex-direction:column;padding:14px 12px;gap:12px;}
+#screen-start{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px;gap:20px;}
+.start-logo{font-size:3rem;}
+.start-title{font-size:1.4rem;font-weight:800;color:var(--aws-dark);text-align:center;line-height:1.4;}
+.start-title span{color:var(--primary);}
+.start-sub{font-size:0.85rem;color:var(--muted);text-align:center;line-height:1.6;}
+.start-stats{background:var(--aws-dark);color:white;border-radius:16px;padding:16px 24px;width:100%;max-width:300px;text-align:center;}
+.start-stats-num{font-size:2rem;font-weight:800;color:var(--primary);}
+.start-stats-label{font-size:0.75rem;opacity:0.8;margin-top:2px;}
+.start-stats-row{display:flex;justify-content:space-around;margin-top:12px;}
+.start-stats-item .n{font-size:1.1rem;font-weight:700;color:var(--primary);}
+.start-stats-item .l{font-size:0.65rem;opacity:0.7;}
+.btn-start{background:var(--primary);color:white;border:none;border-radius:14px;padding:16px 40px;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(255,153,0,0.4);width:100%;max-width:300px;}
+.usecase-card{background:var(--aws-dark);border-radius:18px;padding:22px 20px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.15);color:white;}
+.usecase-label{font-size:0.65rem;font-weight:700;color:var(--primary);letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase;}
+.usecase-level{display:inline-block;font-size:0.65rem;border-radius:10px;padding:2px 10px;font-weight:700;margin-bottom:10px;}
+.level-basic{background:#d1fae5;color:#065f46;}.level-intermediate{background:#fef3c7;color:#92400e;}.level-advanced{background:#fee2e2;color:#991b1b;}
+.usecase-text{font-size:1.1rem;font-weight:700;line-height:1.5;color:white;}
+.usecase-category{display:inline-block;margin-top:10px;font-size:0.68rem;background:rgba(255,153,0,0.2);color:var(--primary);padding:2px 10px;border-radius:20px;font-weight:600;}
+.choices{display:flex;flex-direction:column;gap:8px;}
+.choice{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:12px 14px;text-align:left;cursor:pointer;width:100%;display:flex;align-items:center;gap:10px;font-size:0.85rem;line-height:1.4;transition:border-color 0.15s,background 0.15s;}
+.choice:not(.disabled):hover{border-color:var(--primary);background:#fff8f0;}
+.choice.disabled{cursor:default;}
+.choice.correct{border-color:var(--correct);background:#f0fdf4;}
+.choice.wrong{border-color:var(--wrong);background:#fff1f2;}
+.choice-num{min-width:26px;height:26px;border-radius:50%;background:var(--bg);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;}
+.choice.correct .choice-num{background:var(--correct);color:white;}
+.choice.wrong .choice-num{background:var(--wrong);color:white;}
+.choice-services{font-weight:700;color:var(--aws-dark);}
+.plus{color:var(--muted);margin:0 3px;font-weight:400;}
+.fb{border-radius:14px;padding:12px 14px;font-size:0.85rem;line-height:1.5;display:none;}
+.fb.show{display:block;}
+.fb-correct{background:#f0fdf4;border:1.5px solid #6ee7b7;}
+.fb-wrong{background:#fff1f2;border:1.5px solid #fca5a5;}
+.fb-title{font-weight:700;margin-bottom:4px;}
+.fb-correct .fb-title{color:var(--correct);}.fb-wrong .fb-title{color:var(--wrong);}
+.fb-tip{color:var(--muted);font-size:0.8rem;margin-top:4px;}
+.btn-next{background:var(--aws-dark);color:white;border:none;border-radius:12px;padding:13px;font-size:0.9rem;font-weight:700;cursor:pointer;width:100%;margin-top:10px;}
+#screen-result{display:none;}
+.result-emoji{font-size:3.5rem;margin-bottom:8px;}
+.result-score{font-size:3rem;font-weight:800;color:var(--aws-dark);}
+.result-sub{font-size:0.95rem;color:var(--muted);margin-bottom:8px;text-align:center;}
+.result-wrong-card{background:var(--card);border-radius:14px;padding:12px 14px;width:100%;border:1.5px solid var(--border);margin-bottom:8px;}
+.rwc-usecase{font-size:0.8rem;color:var(--muted);margin-bottom:4px;}
+.rwc-answer{font-weight:700;color:var(--aws-dark);font-size:0.9rem;margin-bottom:4px;}
+.rwc-tip{font-size:0.78rem;color:var(--muted);}
+#celebration-overlay{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;}
+.confetti-piece{position:absolute;animation:confetti-fall linear forwards;border-radius:2px;}
+@keyframes confetti-fall{0%{transform:translateY(0) rotate(0deg);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
+.celebration-text{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.6rem;font-weight:900;text-align:center;z-index:1000;}
+</style>
+</head>
+<body>
+<div id="celebration-overlay"></div>
+<div id="screen-start">
+  <div class="start-logo">☁️</div>
+  <div class="start-title"><span>AWS</span> ユースケースクイズ</div>
+  <div class="start-sub">サービスの「組み合わせ」で学ぶ<br>AWSアーキテクチャ入門</div>
+  <div class="start-stats">
+    <div class="start-stats-num" id="stat-total">0</div>
+    <div class="start-stats-label">問チャレンジ済み</div>
+    <div class="start-stats-row">
+      <div class="start-stats-item"><div class="n" id="stat-correct">0</div><div class="l">正解</div></div>
+      <div class="start-stats-item"><div class="n" id="stat-cards">0</div><div class="l">問題数</div></div>
+      <div class="start-stats-item"><div class="n" id="stat-review">0</div><div class="l">復習待ち</div></div>
+    </div>
+  </div>
+  <button class="btn-start" onclick="startSet()">スタート →</button>
+</div>
+<div id="screen-quiz" style="display:none;flex-direction:column;">
+  <div class="hd">
+    <div class="hd-top">
+      <div class="hd-title">☁️ <span>AWS</span> ユースケースクイズ</div>
+      <div class="hd-qnum" id="hd-qnum">1 / 10</div>
+    </div>
+    <div class="dots" id="dots"></div>
+  </div>
+  <main>
+    <div class="usecase-card">
+      <div class="usecase-label">このユースケースに必要なサービスは？</div>
+      <div id="q-level" class="usecase-level level-basic">Basic</div>
+      <div class="usecase-text" id="q-text"></div>
+      <div class="usecase-category" id="q-category"></div>
+    </div>
+    <div class="choices" id="choices"></div>
+    <div class="fb fb-correct" id="fb-correct">
+      <div class="fb-title">✅ 正解！</div>
+      <div id="fb-correct-ans"></div>
+      <div class="fb-tip" id="fb-correct-tip"></div>
+    </div>
+    <div class="fb fb-wrong" id="fb-wrong">
+      <div class="fb-title">❌ 不正解</div>
+      <div id="fb-wrong-ans"></div>
+      <div class="fb-tip" id="fb-wrong-tip"></div>
+      <button class="btn-next" onclick="nextQuestion()">次へ →</button>
+    </div>
+  </main>
+</div>
+<div id="screen-result"></div>
+<script>
+const CARDS=[
+  {id:1,level:'basic',category:'サーバーレス',usecase:'サーバーレスな REST API を作りたい',services:['API Gateway','Lambda','DynamoDB'],explanation:'API Gateway でリクエスト受付 → Lambda で処理 → DynamoDB にデータ保存',tip:'管理するサーバーが不要。リクエスト数に応じて自動スケール。'},
+  {id:2,level:'basic',category:'ストレージ',usecase:'静的ウェブサイトを世界中に高速配信したい',services:['S3','CloudFront'],explanation:'S3 に静的ファイルを置き CloudFront（CDN）でエッジ配信',tip:'CloudFront のエッジロケーションが世界中にあり、ユーザーに近い場所から配信。'},
+  {id:3,level:'basic',category:'イベント駆動',usecase:'ファイルをアップロードしたら自動で通知を送りたい',services:['S3','Lambda','SNS'],explanation:'S3 イベント → Lambda でトリガー → SNS で通知配信',tip:'S3のイベント通知でLambdaが自動起動。SNSはメール・SMS・SQSへ同報できる。'},
+  {id:4,level:'basic',category:'コンピューティング',usecase:'複数のサーバーにトラフィックを分散させたい',services:['EC2','ELB'],explanation:'ELB（ロードバランサー）が複数の EC2 インスタンスへ振り分ける',tip:'ELB には ALB（HTTP/HTTPS）・NLB（TCP）・CLB の種類がある。'},
+  {id:5,level:'basic',category:'定期実行',usecase:'毎日深夜に定期的なバッチ処理を実行したい',services:['EventBridge','Lambda'],explanation:'EventBridge のスケジュールルールで Lambda を定期起動',tip:'cron 式でスケジュールを設定。サーバー不要で定期処理が実現できる。'},
+  {id:6,level:'basic',category:'非同期処理',usecase:'メッセージを一時的に溜めて非同期に処理したい',services:['SQS','Lambda'],explanation:'SQS キューにメッセージを積む → Lambda がポーリングして処理',tip:'SQS はバッファとして機能。処理が遅くてもメッセージは失われない。'},
+  {id:7,level:'basic',category:'認証',usecase:'アプリにユーザー認証（ログイン機能）を追加したい',services:['Cognito','API Gateway'],explanation:'Cognito でユーザー管理・認証 → API Gateway でトークン検証',tip:'Cognito User Pool でサインアップ/サインインを管理。JWT トークンで API を保護。'},
+  {id:8,level:'basic',category:'データベース',usecase:'高速なキー・バリュー形式のデータを大量に扱いたい',services:['DynamoDB'],explanation:'DynamoDB はフルマネージドの NoSQL DB。大規模でも一桁ミリ秒の応答。',tip:'スケーリングが自動。RDS と違い結合（JOIN）は苦手。アクセスパターンを先に設計する。'},
+  {id:9,level:'basic',category:'セキュリティ',usecase:'CDN に WAF を組み合わせて攻撃を防ぎたい',services:['CloudFront','WAF'],explanation:'WAF のルールで SQLインジェクションや DDoS などをエッジでブロック',tip:'WAF は CloudFront・ALB・API Gateway にアタッチできる。'},
+  {id:10,level:'basic',category:'ストレージ',usecase:'めったにアクセスしないデータを安く長期保存したい',services:['S3','S3 Glacier'],explanation:'S3 ライフサイクルポリシーで古いオブジェクトを Glacier へ自動移行',tip:'Glacier は S3 より最大90%安い。取り出しに時間がかかる（分〜時間）。'},
+  {id:11,level:'intermediate',category:'キャッシュ',usecase:'RDS への負荷を減らすためにキャッシュを追加したい',services:['ElastiCache','RDS'],explanation:'ElastiCache（Redis/Memcached）を RDS の前段に配置してクエリ結果をキャッシュ',tip:'同じクエリを何度も DB に投げない。レスポンス速度が劇的に改善する。'},
+  {id:12,level:'intermediate',category:'コンテナ',usecase:'コンテナアプリをサーバー管理なしで実行したい',services:['ECR','ECS Fargate'],explanation:'ECR にイメージを push → ECS Fargate でサーバーレス実行',tip:'Fargate はEC2の管理が不要。コンテナにリソースを割り当てるだけで動く。'},
+  {id:13,level:'intermediate',category:'ワークフロー',usecase:'複数の Lambda を順序通りに制御して処理したい',services:['Step Functions','Lambda'],explanation:'Step Functions のステートマシンで Lambda の実行順・分岐・リトライを制御',tip:'エラーハンドリングやリトライも Step Functions に任せられる。Lambda をシンプルに保てる。'},
+  {id:14,level:'intermediate',category:'ストリーミング',usecase:'IoTデバイスからのデータをリアルタイムに処理したい',services:['Kinesis','Lambda'],explanation:'Kinesis Data Streams でデータを受信 → Lambda でリアルタイム処理',tip:'Kinesis は大量のストリームデータを秒単位で処理できる。'},
+  {id:15,level:'intermediate',category:'監視',usecase:'アラートが発火したら自動で Lambda を実行したい',services:['CloudWatch','SNS','Lambda'],explanation:'CloudWatch Alarm → SNS トピック → Lambda をトリガー',tip:'CloudWatch はメトリクス監視。SNS を経由することで複数の処理を並行発火できる。'}
+];
+const STORAGE_KEY='aws_quiz_data';
+let data=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{"correct":{},"wrong":{},"pendingReview":[],"totalAnswered":0}');
+let currentSet=[],qIndex=0,results=[],autoTimer=null;
+function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function fmt(s){return s.map((v,i)=>`${v}${i<s.length-1?'<span class="plus">+</span>':''}`).join('');}
+function startSet(){
+  const rev=new Set(data.pendingReview);
+  currentSet=shuffle([...CARDS.filter(c=>rev.has(c.id)),...shuffle(CARDS.filter(c=>!rev.has(c.id)))]).slice(0,10);
+  qIndex=0;results=[];
+  document.getElementById('screen-start').style.display='none';
+  document.getElementById('screen-result').style.display='none';
+  const q=document.getElementById('screen-quiz');q.style.display='flex';q.style.flexDirection='column';
+  showQuestion();
+}
+function showQuestion(){
+  if(qIndex>=currentSet.length){showResult();return;}
+  const c=currentSet[qIndex];
+  document.getElementById('hd-qnum').textContent=`${qIndex+1} / ${currentSet.length}`;
+  const lv=document.getElementById('q-level');lv.textContent=c.level.charAt(0).toUpperCase()+c.level.slice(1);lv.className=`usecase-level level-${c.level}`;
+  document.getElementById('q-text').textContent=c.usecase;
+  document.getElementById('q-category').textContent=c.category;
+  const choices=shuffle([c,...shuffle(CARDS.filter(x=>x.id!==c.id)).slice(0,3)]);
+  const ci=choices.indexOf(c);
+  document.getElementById('choices').innerHTML=choices.map((ch,i)=>`<button class="choice" onclick="answer(${i},${ci})" id="choice-${i}"><div class="choice-num">${i+1}</div><div class="choice-services">${fmt(ch.services)}</div></button>`).join('');
+  document.getElementById('fb-correct').classList.remove('show');
+  document.getElementById('fb-wrong').classList.remove('show');
+  updateDots();if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}
+}
+function updateDots(){
+  document.getElementById('dots').innerHTML=currentSet.map((_,i)=>{
+    let cls='dot';if(i<results.length)cls+=results[i]?' done-ok':' done-ng';else if(i===qIndex)cls+=' current';return`<div class="${cls}"></div>`;
+  }).join('');
+}
+function answer(sel,cor){
+  document.querySelectorAll('.choice').forEach(b=>b.classList.add('disabled'));
+  const ok=sel===cor,c=currentSet[qIndex];
+  document.getElementById(`choice-${cor}`).classList.add('correct');
+  if(!ok)document.getElementById(`choice-${sel}`).classList.add('wrong');
+  data.totalAnswered=(data.totalAnswered||0)+1;
+  if(ok){
+    data.correct[c.id]=(data.correct[c.id]||0)+1;
+    data.pendingReview=data.pendingReview.filter(id=>id!==c.id);
+    results.push(true);
+    document.getElementById('fb-correct-ans').innerHTML=`<strong>${fmt(c.services)}</strong>`;
+    document.getElementById('fb-correct-tip').textContent=c.explanation;
+    document.getElementById('fb-correct').classList.add('show');
+    saveData();updateDots();autoTimer=setTimeout(nextQuestion,1800);
+  }else{
+    data.wrong[c.id]=(data.wrong[c.id]||0)+1;
+    if(!data.pendingReview.includes(c.id))data.pendingReview.push(c.id);
+    results.push(false);
+    document.getElementById('fb-wrong-ans').innerHTML=`正解：<strong>${fmt(c.services)}</strong>`;
+    document.getElementById('fb-wrong-tip').textContent=c.tip;
+    document.getElementById('fb-wrong').classList.add('show');
+    saveData();updateDots();
+  }
+}
+function nextQuestion(){if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}qIndex++;showQuestion();}
+function updateStartStats(){
+  document.getElementById('stat-total').textContent=data.totalAnswered||0;
+  document.getElementById('stat-correct').textContent=Object.values(data.correct).reduce((s,v)=>s+v,0);
+  document.getElementById('stat-cards').textContent=CARDS.length;
+  document.getElementById('stat-review').textContent=(data.pendingReview||[]).length;
+}
+function celebrate(score){
+  const o=document.getElementById('celebration-overlay');o.innerHTML='';
+  if(score>=9){launchConfetti(score===10?120:60);const t=document.createElement('div');t.className='celebration-text';t.innerHTML=score===10?'🏆 Perfect! 🏆<br><span style="font-size:1.1rem">全問正解！完璧です！</span>':'🌟 Excellent! 🌟<br><span style="font-size:1.1rem">9問正解！すごい！</span>';t.style.cssText='color:white;background:linear-gradient(135deg,#232f3e,#FF9900);padding:20px 28px;border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,0.3)';document.body.appendChild(t);setTimeout(()=>{t.remove();o.innerHTML='';},3500);}
+}
+function launchConfetti(n){
+  const o=document.getElementById('celebration-overlay'),colors=['#FF9900','#232f3e','#059669','#3b82f6','#8b5cf6','#ec4899','#06b6d4'];
+  for(let i=0;i<n;i++){const el=document.createElement('div');el.className='confetti-piece';el.style.cssText=`left:${Math.random()*100}%;top:-10px;background:${colors[Math.floor(Math.random()*colors.length)]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${2+Math.random()*2}s;animation-delay:${Math.random()*1.5}s`;o.appendChild(el);}
+  setTimeout(()=>{o.innerHTML='';},5000);
+}
+function showResult(){
+  document.getElementById('screen-quiz').style.display='none';
+  const n=results.filter(Boolean).length,wrong=currentSet.filter((_,i)=>!results[i]);
+  if(n>=9)setTimeout(()=>celebrate(n),400);
+  const emoji=n===10?'🏆':n>=9?'🌟':n>=8?'🎉':n>=6?'👍':'💪';
+  const msg=n===10?'完璧！全問正解！':n>=9?'あと1問！惜しい！':n>=8?'よくできました！':n>=6?'もう一歩！':'復習して完璧にしよう！';
+  const ws=wrong.length>0?`<div style="font-size:0.75rem;font-weight:700;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin:12px 0 6px;align-self:flex-start">復習しよう</div>${wrong.map(c=>`<div class="result-wrong-card"><div class="rwc-usecase">${c.usecase}</div><div class="rwc-answer">→ ${c.services.join(' + ')}</div><div class="rwc-tip">💡 ${c.tip}</div></div>`).join('')}`:'<div style="color:var(--correct);font-weight:700;margin-bottom:16px;text-align:center">🎊 全問正解！完璧です！</div>';
+  const r=document.getElementById('screen-result');
+  r.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;padding:24px 16px;overflow-y:auto;flex:1"><div class="result-emoji">${emoji}</div><div class="result-score">${n} <span style="font-size:1.2rem;color:var(--muted)">/ ${currentSet.length}</span></div><div class="result-sub">${msg}</div>${ws}<button class="btn-start" onclick="goStart()" style="margin-top:16px">もう一度 →</button></div>`;
+  r.style.cssText='display:flex;flex-direction:column;flex:1';updateStartStats();
+}
+function goStart(){document.getElementById('screen-result').style.display='none';const s=document.getElementById('screen-start');s.style.display='flex';s.style.flexDirection='column';updateStartStats();}
+updateStartStats();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/aws-usecase-quiz/service-worker.js');
+</script>
+</body>
+</html>
