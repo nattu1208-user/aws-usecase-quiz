@@ -113,6 +113,7 @@ main{flex:1;display:flex;flex-direction:column;padding:14px 12px;gap:12px;}
       <div class="fb-title">✅ 正解！</div>
       <div id="fb-correct-ans"></div>
       <div class="fb-tip" id="fb-correct-tip"></div>
+      <button class="btn-next" onclick="nextQuestion()" style="margin-top:10px">次へ →</button>
     </div>
     <div class="fb fb-wrong" id="fb-wrong">
       <div class="fb-title">❌ 不正解</div>
@@ -220,7 +221,7 @@ function answer(sel,cor){
     document.getElementById('fb-correct-ans').innerHTML=`<strong>${fmt(c.services)}</strong>`;
     document.getElementById('fb-correct-tip').textContent=c.explanation;
     document.getElementById('fb-correct').classList.add('show');
-    saveData();updateDots();autoTimer=setTimeout(nextQuestion,1800);
+    saveData();updateDots();
   }else{
     data.wrong[c.id]=(data.wrong[c.id]||0)+1;
     if(!data.pendingReview.includes(c.id))data.pendingReview.push(c.id);
