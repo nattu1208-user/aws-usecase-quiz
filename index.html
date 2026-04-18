@@ -151,6 +151,17 @@ const CARDS=[
   {id:22,level:'intermediate',category:'設定管理',usecase:'DBパスワードや設定値をコードに書かず安全に管理したい',services:['Secrets Manager','Lambda'],explanation:'Secrets Manager に機密情報を保存 → Lambda から API で動的取得',tip:'Secrets Manager は自動ローテーション機能あり。Parameter Store より高機能だがコスト高。'},
   {id:23,level:'intermediate',category:'AI・ML',usecase:'画像をアップロードしたら自動でAIで内容を解析したい',services:['S3','Lambda','Rekognition'],explanation:'S3 アップロード → Lambda 起動 → Rekognition で物体検出・ラベリング',tip:'Rekognition は顔認識・テキスト抽出・不適切コンテンツ検出なども可能。'},
   {id:24,level:'intermediate',category:'データベース',usecase:'RDSの読み取り負荷を分散してパフォーマンスを上げたい',services:['Aurora','Read Replica'],explanation:'Aurora のリードレプリカに読み取りクエリを分散し、ライターへの負荷を軽減',tip:'Aurora は MySQL/PostgreSQL 互換で RDS より最大5倍高速。フェイルオーバーも高速。'},
+  // ── Basic Lambda特化 ──
+  {id:28,level:'basic',category:'Lambda',usecase:'API Gateway を使わずに Lambda に直接 HTTPS でアクセスしたい',services:['Lambda Function URLs'],explanation:'Lambda Function URLs を有効化するだけで Lambda に固有の HTTPS エンドポイントが発行される',tip:'API Gatewayが不要なシンプルなユースケース向け。認証は IAM または NONE を選択。2022年リリース。'},
+  {id:29,level:'basic',category:'Lambda',usecase:'複数の Lambda 関数で共通ライブラリや設定ファイルを使い回したい',services:['Lambda Layers'],explanation:'Lambda Layers に共通コードをパッケージして複数の関数からアタッチして再利用',tip:'1つの関数に最大5つのLayerをアタッチ可能。ランタイムのバージョン管理にも使える。'},
+  {id:30,level:'basic',category:'Lambda',usecase:'Lambda の処理が失敗したとき、失敗したイベントを捨てずに保持したい',services:['Lambda','SQS（DLQ）'],explanation:'Lambda に Dead Letter Queue（DLQ）として SQS を設定。失敗したイベントを SQS に送信して後から再処理。',tip:'DLQ は非同期呼び出し（S3イベント・SNSなど）に有効。同期呼び出し（API Gateway）では使えない。'},
+  // ── Intermediate Lambda特化 ──
+  {id:31,level:'intermediate',category:'Lambda',usecase:'Lambda から RDS に大量接続するとコネクションが枯渇してしまう',services:['Lambda','RDS Proxy'],explanation:'RDS Proxy がコネクションプールを管理。Lambda の急増スケールでもDBへの接続数を制御できる',tip:'Lambda はスケールアップのたびに新しいコネクションを張るためRDSを圧迫しやすい。RDS Proxy が間に入ることで解消。'},
+  {id:32,level:'intermediate',category:'Lambda',usecase:'SQS のメッセージをフィルタリング・変換してから Lambda に渡したい',services:['EventBridge Pipes','Lambda'],explanation:'EventBridge Pipes でソース（SQS）→フィルタ→エンリッチメント→ターゲット（Lambda）をノーコードで接続',tip:'EventBridge Pipes は 2022 年リリース。Lambda を書かなくてもイベントの変換・フィルタが可能。'},
+  {id:33,level:'intermediate',category:'Lambda',usecase:'生成AI（LLM）を使ったチャットボットをサーバーレスで作りたい',services:['Lambda','Bedrock'],explanation:'Lambda から Bedrock の API を呼び出してClaude/Titan などの LLM を利用。サーバー管理不要。',tip:'Bedrock は複数のFMを統一APIで呼び出せる。Lambda と組み合わせることでスケーラブルな生成AIアプリを構築できる。'},
+  {id:34,level:'intermediate',category:'Lambda',usecase:'Lambda 関数間で大容量ファイルを共有・永続化したい',services:['Lambda','EFS'],explanation:'Lambda に EFS（Elastic File System）をマウント。関数をまたいだファイルの読み書きが可能。',tip:'ML モデルファイルや一時作業ディレクトリとして使われる。Lambda のデフォルトの /tmp（512MB）より大容量が必要なときに選択。'},
+  // ── Advanced Lambda特化 ──
+  {id:35,level:'advanced',category:'Lambda',usecase:'Java の Lambda でコールドスタートが遅すぎてレスポンスに影響している',services:['Lambda SnapStart'],explanation:'Lambda SnapStart を有効化すると初期化済みのスナップショットから起動し、コールドスタートを最大90%削減',tip:'2022年リリース。Java 11以降で利用可能。スナップショットはバージョン発行時に作成される。'},
   // ── Advanced ──
   {id:25,level:'advanced',category:'コンテナ',usecase:'Kubernetes でコンテナを本番スケールで管理したい',services:['EKS','ECR'],explanation:'ECR にコンテナイメージを保管 → EKS（マネージド Kubernetes）でオーケストレーション',tip:'EKS は Kubernetes のコントロールプレーンをAWSが管理。ノードグループは自分で設定する。'},
   {id:26,level:'advanced',category:'ネットワーク',usecase:'プライベートサブネットのEC2からインターネットに出たい',services:['VPC','NAT Gateway'],explanation:'プライベートサブネット → NAT Gateway（パブリックサブネット）→ インターネット',tip:'NAT Gateway は時間課金＋データ転送料。コスト節約には VPC エンドポイントの活用も検討。'},
