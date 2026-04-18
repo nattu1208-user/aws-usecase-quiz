@@ -125,6 +125,7 @@ main{flex:1;display:flex;flex-direction:column;padding:14px 12px;gap:12px;}
 <div id="screen-result"></div>
 <script>
 const CARDS=[
+  // ── Basic ──
   {id:1,level:'basic',category:'サーバーレス',usecase:'サーバーレスな REST API を作りたい',services:['API Gateway','Lambda','DynamoDB'],explanation:'API Gateway でリクエスト受付 → Lambda で処理 → DynamoDB にデータ保存',tip:'管理するサーバーが不要。リクエスト数に応じて自動スケール。'},
   {id:2,level:'basic',category:'ストレージ',usecase:'静的ウェブサイトを世界中に高速配信したい',services:['S3','CloudFront'],explanation:'S3 に静的ファイルを置き CloudFront（CDN）でエッジ配信',tip:'CloudFront のエッジロケーションが世界中にあり、ユーザーに近い場所から配信。'},
   {id:3,level:'basic',category:'イベント駆動',usecase:'ファイルをアップロードしたら自動で通知を送りたい',services:['S3','Lambda','SNS'],explanation:'S3 イベント → Lambda でトリガー → SNS で通知配信',tip:'S3のイベント通知でLambdaが自動起動。SNSはメール・SMS・SQSへ同報できる。'},
@@ -135,11 +136,25 @@ const CARDS=[
   {id:8,level:'basic',category:'データベース',usecase:'高速なキー・バリュー形式のデータを大量に扱いたい',services:['DynamoDB'],explanation:'DynamoDB はフルマネージドの NoSQL DB。大規模でも一桁ミリ秒の応答。',tip:'スケーリングが自動。RDS と違い結合（JOIN）は苦手。アクセスパターンを先に設計する。'},
   {id:9,level:'basic',category:'セキュリティ',usecase:'CDN に WAF を組み合わせて攻撃を防ぎたい',services:['CloudFront','WAF'],explanation:'WAF のルールで SQLインジェクションや DDoS などをエッジでブロック',tip:'WAF は CloudFront・ALB・API Gateway にアタッチできる。'},
   {id:10,level:'basic',category:'ストレージ',usecase:'めったにアクセスしないデータを安く長期保存したい',services:['S3','S3 Glacier'],explanation:'S3 ライフサイクルポリシーで古いオブジェクトを Glacier へ自動移行',tip:'Glacier は S3 より最大90%安い。取り出しに時間がかかる（分〜時間）。'},
+  {id:16,level:'basic',category:'ネットワーク',usecase:'独自ドメインで ALB にルーティングしたい',services:['Route 53','ALB'],explanation:'Route 53 でドメインの DNS 管理 → ALB のエンドポイントへ A レコードで転送',tip:'Route 53 は AWS のマネージド DNS。ヘルスチェックと連携したフェイルオーバーも可能。'},
+  {id:17,level:'basic',category:'セキュリティ',usecase:'AWSリソースへのアクセス権限をユーザー・ロールで管理したい',services:['IAM'],explanation:'IAM ユーザー・グループ・ロールにポリシーをアタッチして権限を制御',tip:'最小権限の原則が基本。EC2 や Lambda には IAM ロールを付与する（アクセスキー不要）。'},
+  {id:18,level:'basic',category:'データベース',usecase:'MySQL/PostgreSQL 互換の RDB をマネージドで使いたい',services:['RDS'],explanation:'RDS はパッチ適用・バックアップ・フェイルオーバーをAWSが管理するマネージドRDB',tip:'Multi-AZ 構成にすると自動フェイルオーバーで高可用性を実現できる。'},
+  {id:19,level:'basic',category:'インフラ管理',usecase:'インフラをコードで定義して再現性を持たせたい（IaC）',services:['CloudFormation'],explanation:'CloudFormation テンプレート（YAML/JSON）でAWSリソースを宣言的に定義・デプロイ',tip:'CDK を使うと TypeScript/Python でテンプレートを生成できる。Amplify も内部で使用。'},
+  {id:20,level:'basic',category:'メール',usecase:'アプリからメールを大量に送信したい',services:['SES','Lambda'],explanation:'Lambda から SES API を呼び出してメール送信。トランザクションメールに最適。',tip:'最初はサンドボックス環境で制限あり。本番利用は申請が必要。'},
+  // ── Intermediate ──
   {id:11,level:'intermediate',category:'キャッシュ',usecase:'RDS への負荷を減らすためにキャッシュを追加したい',services:['ElastiCache','RDS'],explanation:'ElastiCache（Redis/Memcached）を RDS の前段に配置してクエリ結果をキャッシュ',tip:'同じクエリを何度も DB に投げない。レスポンス速度が劇的に改善する。'},
   {id:12,level:'intermediate',category:'コンテナ',usecase:'コンテナアプリをサーバー管理なしで実行したい',services:['ECR','ECS Fargate'],explanation:'ECR にイメージを push → ECS Fargate でサーバーレス実行',tip:'Fargate はEC2の管理が不要。コンテナにリソースを割り当てるだけで動く。'},
   {id:13,level:'intermediate',category:'ワークフロー',usecase:'複数の Lambda を順序通りに制御して処理したい',services:['Step Functions','Lambda'],explanation:'Step Functions のステートマシンで Lambda の実行順・分岐・リトライを制御',tip:'エラーハンドリングやリトライも Step Functions に任せられる。Lambda をシンプルに保てる。'},
   {id:14,level:'intermediate',category:'ストリーミング',usecase:'IoTデバイスからのデータをリアルタイムに処理したい',services:['Kinesis','Lambda'],explanation:'Kinesis Data Streams でデータを受信 → Lambda でリアルタイム処理',tip:'Kinesis は大量のストリームデータを秒単位で処理できる。'},
-  {id:15,level:'intermediate',category:'監視',usecase:'アラートが発火したら自動で Lambda を実行したい',services:['CloudWatch','SNS','Lambda'],explanation:'CloudWatch Alarm → SNS トピック → Lambda をトリガー',tip:'CloudWatch はメトリクス監視。SNS を経由することで複数の処理を並行発火できる。'}
+  {id:15,level:'intermediate',category:'監視',usecase:'アラート発火時にメール通知とLambda処理を同時に行いたい',services:['CloudWatch','SNS','Lambda'],explanation:'CloudWatch Alarm → SNS トピック → Lambda とメール通知を同時にトリガー',tip:'SNS を経由することで複数の処理（Lambda・メール・SMS）を並行して発火できるのが強み。'},
+  {id:21,level:'intermediate',category:'監査',usecase:'誰がいつどのAWSリソースを操作したか記録・監査したい',services:['CloudTrail'],explanation:'CloudTrail は全 API コールを記録。S3 に保存して Athena でクエリ可能。',tip:'セキュリティインシデント調査や証跡管理に必須。デフォルトで 90 日間保存される。'},
+  {id:22,level:'intermediate',category:'設定管理',usecase:'DBパスワードや設定値をコードに書かず安全に管理したい',services:['Secrets Manager','Lambda'],explanation:'Secrets Manager に機密情報を保存 → Lambda から API で動的取得',tip:'Secrets Manager は自動ローテーション機能あり。Parameter Store より高機能だがコスト高。'},
+  {id:23,level:'intermediate',category:'AI・ML',usecase:'画像をアップロードしたら自動でAIで内容を解析したい',services:['S3','Lambda','Rekognition'],explanation:'S3 アップロード → Lambda 起動 → Rekognition で物体検出・ラベリング',tip:'Rekognition は顔認識・テキスト抽出・不適切コンテンツ検出なども可能。'},
+  {id:24,level:'intermediate',category:'データベース',usecase:'RDSの読み取り負荷を分散してパフォーマンスを上げたい',services:['Aurora','Read Replica'],explanation:'Aurora のリードレプリカに読み取りクエリを分散し、ライターへの負荷を軽減',tip:'Aurora は MySQL/PostgreSQL 互換で RDS より最大5倍高速。フェイルオーバーも高速。'},
+  // ── Advanced ──
+  {id:25,level:'advanced',category:'コンテナ',usecase:'Kubernetes でコンテナを本番スケールで管理したい',services:['EKS','ECR'],explanation:'ECR にコンテナイメージを保管 → EKS（マネージド Kubernetes）でオーケストレーション',tip:'EKS は Kubernetes のコントロールプレーンをAWSが管理。ノードグループは自分で設定する。'},
+  {id:26,level:'advanced',category:'ネットワーク',usecase:'プライベートサブネットのEC2からインターネットに出たい',services:['VPC','NAT Gateway'],explanation:'プライベートサブネット → NAT Gateway（パブリックサブネット）→ インターネット',tip:'NAT Gateway は時間課金＋データ転送料。コスト節約には VPC エンドポイントの活用も検討。'},
+  {id:27,level:'advanced',category:'CI/CD',usecase:'コードをプッシュしたら自動でビルド・テスト・デプロイしたい',services:['CodePipeline','CodeBuild','ECR'],explanation:'CodePipeline がソース→ビルド→デプロイを自動化。CodeBuild でテスト＆イメージビルド。',tip:'GitHub Actions と組み合わせることも可能。ECS/EKS へのデプロイまで自動化できる。'}
 ];
 const STORAGE_KEY='aws_quiz_data';
 let data=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{"correct":{},"wrong":{},"pendingReview":[],"totalAnswered":0}');
@@ -149,7 +164,13 @@ function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Mat
 function fmt(s){return s.map((v,i)=>`${v}${i<s.length-1?'<span class="plus">+</span>':''}`).join('');}
 function startSet(){
   const rev=new Set(data.pendingReview);
-  currentSet=shuffle([...CARDS.filter(c=>rev.has(c.id)),...shuffle(CARDS.filter(c=>!rev.has(c.id)))]).slice(0,10);
+  const reviewCards=shuffle(CARDS.filter(c=>rev.has(c.id)));
+  const basicCards=shuffle(CARDS.filter(c=>c.level==='basic'&&!rev.has(c.id)));
+  const otherCards=shuffle(CARDS.filter(c=>c.level!=='basic'&&!rev.has(c.id)));
+  // 1問目は必ずBasic（復習カードがない場合）
+  const first=basicCards.length>0?basicCards.shift():(reviewCards.shift()||otherCards.shift());
+  const pool=shuffle([...reviewCards,...basicCards,...otherCards]);
+  currentSet=[first,...pool].slice(0,5);
   qIndex=0;results=[];
   document.getElementById('screen-start').style.display='none';
   document.getElementById('screen-result').style.display='none';
@@ -208,7 +229,7 @@ function updateStartStats(){
 }
 function celebrate(score){
   const o=document.getElementById('celebration-overlay');o.innerHTML='';
-  if(score>=9){launchConfetti(score===10?120:60);const t=document.createElement('div');t.className='celebration-text';t.innerHTML=score===10?'🏆 Perfect! 🏆<br><span style="font-size:1.1rem">全問正解！完璧です！</span>':'🌟 Excellent! 🌟<br><span style="font-size:1.1rem">9問正解！すごい！</span>';t.style.cssText='color:white;background:linear-gradient(135deg,#232f3e,#FF9900);padding:20px 28px;border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,0.3)';document.body.appendChild(t);setTimeout(()=>{t.remove();o.innerHTML='';},3500);}
+  if(score>=4){launchConfetti(score===5?120:60);const t=document.createElement('div');t.className='celebration-text';t.innerHTML=score===5?'🏆 Perfect! 🏆<br><span style="font-size:1.1rem">全問正解！完璧です！</span>':'🌟 Excellent! 🌟<br><span style="font-size:1.1rem">4問正解！すごい！</span>';t.style.cssText='color:white;background:linear-gradient(135deg,#232f3e,#FF9900);padding:20px 28px;border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,0.3)';document.body.appendChild(t);setTimeout(()=>{t.remove();o.innerHTML='';},3500);}
 }
 function launchConfetti(n){
   const o=document.getElementById('celebration-overlay'),colors=['#FF9900','#232f3e','#059669','#3b82f6','#8b5cf6','#ec4899','#06b6d4'];
@@ -218,9 +239,9 @@ function launchConfetti(n){
 function showResult(){
   document.getElementById('screen-quiz').style.display='none';
   const n=results.filter(Boolean).length,wrong=currentSet.filter((_,i)=>!results[i]);
-  if(n>=9)setTimeout(()=>celebrate(n),400);
-  const emoji=n===10?'🏆':n>=9?'🌟':n>=8?'🎉':n>=6?'👍':'💪';
-  const msg=n===10?'完璧！全問正解！':n>=9?'あと1問！惜しい！':n>=8?'よくできました！':n>=6?'もう一歩！':'復習して完璧にしよう！';
+  if(n>=4)setTimeout(()=>celebrate(n),400);
+  const emoji=n===5?'🏆':n===4?'🌟':n===3?'🎉':n===2?'👍':'💪';
+  const msg=n===5?'完璧！全問正解！':n===4?'あと1問！惜しい！':n===3?'よくできました！':n===2?'もう一歩！':'復習して完璧にしよう！';
   const ws=wrong.length>0?`<div style="font-size:0.75rem;font-weight:700;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin:12px 0 6px;align-self:flex-start">復習しよう</div>${wrong.map(c=>`<div class="result-wrong-card"><div class="rwc-usecase">${c.usecase}</div><div class="rwc-answer">→ ${c.services.join(' + ')}</div><div class="rwc-tip">💡 ${c.tip}</div></div>`).join('')}`:'<div style="color:var(--correct);font-weight:700;margin-bottom:16px;text-align:center">🎊 全問正解！完璧です！</div>';
   const r=document.getElementById('screen-result');
   r.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;padding:24px 16px;overflow-y:auto;flex:1"><div class="result-emoji">${emoji}</div><div class="result-score">${n} <span style="font-size:1.2rem;color:var(--muted)">/ ${currentSet.length}</span></div><div class="result-sub">${msg}</div>${ws}<button class="btn-start" onclick="goStart()" style="margin-top:16px">もう一度 →</button></div>`;
