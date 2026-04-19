@@ -1,267 +1,1011 @@
 <!DOCTYPE html>
+<!--
+  AWS 逆引きクイズ
+  目的: AWSサービスの組み合わせを見て、ユースケースを4択で選ぶ逆引き形式のクイズアプリ。
+       暗記ではなく「なぜこの組み合わせがこのユースケースを実現するのか」の深い理解を促す。
+  作成者: Sekimoto Naoto
+  作成日: 2026-04-19
+-->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>AWS ユースケースクイズ</title>
+<title>AWS 逆引きクイズ</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#FF9900">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="AWSクイズ">
+<meta name="apple-mobile-web-app-title" content="AWS逆引きクイズ">
 <link rel="apple-touch-icon" href="icons/icon-192.png?v=2">
-<link rel="apple-touch-icon-precomposed" href="icons/icon-192.png?v=2">
+<script src="questions.js"></script>
 <style>
-:root{--primary:#FF9900;--correct:#059669;--wrong:#dc2626;--bg:#f1f5f9;--card:#ffffff;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;--aws-dark:#232f3e;}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100%;max-width:520px;margin:0 auto;}
-.hd{background:var(--aws-dark);padding:10px 16px 8px;color:white;flex-shrink:0;}
-.hd-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-.hd-title{font-size:0.78rem;font-weight:700;opacity:0.9;}
-.hd-title span{color:var(--primary);}
-.hd-qnum{font-size:0.85rem;font-weight:700;color:var(--primary);}
-.dots{display:flex;gap:4px;}
-.dot{width:22px;height:6px;border-radius:3px;background:rgba(255,255,255,0.2);transition:background 0.3s;}
-.dot.done-ok{background:#6ee7b7;}.dot.done-ng{background:#fca5a5;}.dot.current{background:var(--primary);}
-main{flex:1;display:flex;flex-direction:column;padding:14px 12px;gap:12px;}
-#screen-start{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px;gap:20px;}
-.start-logo{font-size:3rem;}
-.start-title{font-size:1.4rem;font-weight:800;color:var(--aws-dark);text-align:center;line-height:1.4;}
-.start-title span{color:var(--primary);}
-.start-sub{font-size:0.85rem;color:var(--muted);text-align:center;line-height:1.6;}
-.start-stats{background:var(--aws-dark);color:white;border-radius:16px;padding:16px 24px;width:100%;max-width:300px;text-align:center;}
-.start-stats-num{font-size:2rem;font-weight:800;color:var(--primary);}
-.start-stats-label{font-size:0.75rem;opacity:0.8;margin-top:2px;}
-.start-stats-row{display:flex;justify-content:space-around;margin-top:12px;}
-.start-stats-item .n{font-size:1.1rem;font-weight:700;color:var(--primary);}
-.start-stats-item .l{font-size:0.65rem;opacity:0.7;}
-.btn-start{background:var(--primary);color:white;border:none;border-radius:14px;padding:16px 40px;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(255,153,0,0.4);width:100%;max-width:300px;}
-.usecase-card{background:var(--aws-dark);border-radius:18px;padding:22px 20px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.15);color:white;}
-.usecase-label{font-size:0.65rem;font-weight:700;color:var(--primary);letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase;}
-.usecase-level{display:inline-block;font-size:0.65rem;border-radius:10px;padding:2px 10px;font-weight:700;margin-bottom:10px;}
-.level-basic{background:#d1fae5;color:#065f46;}.level-intermediate{background:#fef3c7;color:#92400e;}.level-advanced{background:#fee2e2;color:#991b1b;}
-.usecase-text{font-size:1.1rem;font-weight:700;line-height:1.5;color:white;}
-.usecase-category{display:inline-block;margin-top:10px;font-size:0.68rem;background:rgba(255,153,0,0.2);color:var(--primary);padding:2px 10px;border-radius:20px;font-weight:600;}
-.choices{display:flex;flex-direction:column;gap:8px;}
-.choice{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:12px 14px;text-align:left;cursor:pointer;width:100%;display:flex;align-items:center;gap:10px;font-size:0.85rem;line-height:1.4;transition:border-color 0.15s,background 0.15s;}
-.choice:not(.disabled):hover{border-color:var(--primary);background:#fff8f0;}
-.choice.disabled{cursor:default;}
-.choice.correct{border-color:var(--correct);background:#f0fdf4;}
-.choice.wrong{border-color:var(--wrong);background:#fff1f2;}
-.choice-num{min-width:26px;height:26px;border-radius:50%;background:var(--bg);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;}
-.choice.correct .choice-num{background:var(--correct);color:white;}
-.choice.wrong .choice-num{background:var(--wrong);color:white;}
-.choice-services{font-weight:700;color:var(--aws-dark);}
-.plus{color:var(--muted);margin:0 3px;font-weight:400;}
-.fb{border-radius:14px;padding:12px 14px;font-size:0.85rem;line-height:1.5;display:none;}
-.fb.show{display:block;}
-.fb-correct{background:#f0fdf4;border:1.5px solid #6ee7b7;}
-.fb-wrong{background:#fff1f2;border:1.5px solid #fca5a5;}
-.fb-title{font-weight:700;margin-bottom:4px;}
-.fb-correct .fb-title{color:var(--correct);}.fb-wrong .fb-title{color:var(--wrong);}
-.fb-tip{color:var(--muted);font-size:0.8rem;margin-top:4px;}
-.btn-next{background:var(--aws-dark);color:white;border:none;border-radius:12px;padding:13px;font-size:0.9rem;font-weight:700;cursor:pointer;width:100%;margin-top:10px;}
-#screen-result{display:none;}
-.result-emoji{font-size:3.5rem;margin-bottom:8px;}
-.result-score{font-size:3rem;font-weight:800;color:var(--aws-dark);}
-.result-sub{font-size:0.95rem;color:var(--muted);margin-bottom:8px;text-align:center;}
-.result-wrong-card{background:var(--card);border-radius:14px;padding:12px 14px;width:100%;border:1.5px solid var(--border);margin-bottom:8px;}
-.rwc-usecase{font-size:0.8rem;color:var(--muted);margin-bottom:4px;}
-.rwc-answer{font-weight:700;color:var(--aws-dark);font-size:0.9rem;margin-bottom:4px;}
-.rwc-tip{font-size:0.78rem;color:var(--muted);}
-#celebration-overlay{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;}
-.confetti-piece{position:absolute;animation:confetti-fall linear forwards;border-radius:2px;}
-@keyframes confetti-fall{0%{transform:translateY(0) rotate(0deg);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
-.celebration-text{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.6rem;font-weight:900;text-align:center;z-index:1000;}
+/* ==============================
+   CSS変数・リセット
+============================== */
+:root {
+  --primary: #FF9900;
+  --aws-dark: #232f3e;
+  --correct: #059669;
+  --wrong: #dc2626;
+  --bg: #f1f5f9;
+  --card: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --section-roles: #f0f9ff;
+  --section-flow: #f0fdf4;
+  --section-why: #fffbeb;
+  --section-tip: #fdf4ff;
+}
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+html, body {
+  height: 100%;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* ==============================
+   スタート画面
+============================== */
+#screen-start {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 40px 20px;
+  gap: 20px;
+}
+.start-logo {
+  font-size: 3.2rem;
+}
+.start-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--aws-dark);
+  text-align: center;
+  line-height: 1.35;
+}
+.start-title .hl {
+  color: var(--primary);
+}
+.start-sub {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.7;
+}
+.start-stats {
+  background: var(--aws-dark);
+  color: white;
+  border-radius: 18px;
+  padding: 18px 24px;
+  width: 100%;
+  max-width: 320px;
+  text-align: center;
+}
+.stat-main-num {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+.stat-main-label {
+  font-size: 0.75rem;
+  opacity: 0.75;
+  margin-top: 4px;
+  margin-bottom: 14px;
+}
+.stat-row {
+  display: flex;
+  justify-content: space-around;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  padding-top: 12px;
+}
+.stat-item .n {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+.stat-item .l {
+  font-size: 0.65rem;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+.btn-start {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 16px 0;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  max-width: 320px;
+  box-shadow: 0 4px 16px rgba(255,153,0,0.35);
+  transition: opacity 0.15s;
+}
+.btn-start:active {
+  opacity: 0.85;
+}
+
+/* ==============================
+   クイズ画面 ヘッダー
+============================== */
+#screen-quiz {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+}
+.quiz-header {
+  background: var(--aws-dark);
+  padding: 10px 16px 10px;
+  color: white;
+  flex-shrink: 0;
+}
+.quiz-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.quiz-header-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  opacity: 0.9;
+}
+.quiz-header-title .hl {
+  color: var(--primary);
+}
+.quiz-header-num {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+.progress-dots {
+  display: flex;
+  gap: 5px;
+}
+.dot {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.2);
+  transition: background 0.3s, width 0.3s;
+  flex: 1;
+}
+.dot.done-ok { background: #6ee7b7; }
+.dot.done-ng { background: #fca5a5; }
+.dot.current { background: var(--primary); }
+
+/* ==============================
+   クイズ本体エリア
+============================== */
+.quiz-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 14px;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+/* 問題カード（ダーク） */
+.question-card {
+  background: var(--aws-dark);
+  border-radius: 18px;
+  padding: 20px 18px 18px;
+  color: white;
+  box-shadow: 0 2px 14px rgba(0,0,0,0.18);
+}
+.question-card-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.services-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  justify-content: center;
+}
+.service-badge {
+  background: var(--primary);
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.service-plus {
+  color: rgba(255,255,255,0.5);
+  font-size: 1rem;
+  font-weight: 300;
+}
+.question-meta {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.level-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 10px;
+}
+.level-basic { background: #d1fae5; color: #065f46; }
+.level-intermediate { background: #fef3c7; color: #92400e; }
+.level-advanced { background: #fee2e2; color: #991b1b; }
+.category-badge {
+  font-size: 0.62rem;
+  background: rgba(255,153,0,0.2);
+  color: var(--primary);
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* 選択肢 */
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.choice-btn {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  transition: border-color 0.15s, background 0.15s;
+}
+.choice-btn:not(.disabled):hover {
+  border-color: var(--primary);
+  background: #fff8f0;
+}
+.choice-btn.disabled { cursor: default; }
+.choice-btn.correct {
+  border-color: var(--correct);
+  background: #f0fdf4;
+}
+.choice-btn.wrong {
+  border-color: var(--wrong);
+  background: #fff1f2;
+}
+.choice-num {
+  min-width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.choice-btn.correct .choice-num {
+  background: var(--correct);
+  color: white;
+}
+.choice-btn.wrong .choice-num {
+  background: var(--wrong);
+  color: white;
+}
+.choice-text {
+  color: var(--text);
+}
+
+/* ==============================
+   解説パネル
+============================== */
+.explanation-panel {
+  display: none;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+.explanation-panel.show {
+  display: block;
+}
+.exp-header {
+  padding: 14px 16px 12px;
+  font-size: 1rem;
+  font-weight: 800;
+}
+.exp-header.correct-header {
+  background: #f0fdf4;
+  border-left: 4px solid var(--correct);
+  color: var(--correct);
+}
+.exp-header.wrong-header {
+  background: #fff1f2;
+  border-left: 4px solid var(--wrong);
+  color: var(--wrong);
+}
+
+.exp-section {
+  padding: 12px 16px;
+  border-top: 1px solid rgba(0,0,0,0.05);
+}
+.exp-section-title {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+/* 各サービスの役割セクション */
+.exp-roles {
+  background: var(--section-roles);
+}
+.role-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+.role-item:last-child { margin-bottom: 0; }
+.role-badge {
+  background: var(--primary);
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.role-desc {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+/* データの流れセクション */
+.exp-flow {
+  background: var(--section-flow);
+}
+.flow-text {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--text);
+  font-weight: 500;
+}
+/* なぜこの組み合わせセクション */
+.exp-why {
+  background: var(--section-why);
+}
+.why-text {
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--text);
+}
+/* ポイントセクション */
+.exp-tip {
+  background: var(--section-tip);
+}
+.tip-text {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: #6b21a8;
+  font-weight: 500;
+}
+.tip-icon {
+  margin-right: 4px;
+}
+
+/* 次へボタン */
+.btn-next {
+  display: block;
+  width: 100%;
+  background: var(--aws-dark);
+  color: white;
+  border: none;
+  border-radius: 0;
+  padding: 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: opacity 0.15s;
+}
+.btn-next:active {
+  opacity: 0.85;
+}
+
+/* ==============================
+   結果画面
+============================== */
+#screen-result {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+}
+.result-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 18px;
+  overflow-y: auto;
+  flex: 1;
+}
+.result-emoji {
+  font-size: 3.5rem;
+  margin-bottom: 8px;
+}
+.result-score {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--aws-dark);
+  line-height: 1;
+}
+.result-score-denom {
+  font-size: 1.2rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+.result-msg {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin-top: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.result-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  align-self: flex-start;
+}
+.wrong-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+.wrong-card-label {
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.wrong-card-services {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.wrong-card-service {
+  background: var(--primary);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.wrong-card-plus {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.wrong-card-usecase {
+  font-size: 0.82rem;
+  color: var(--text);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* confetti */
+#celebration-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 999;
+}
+.confetti-piece {
+  position: absolute;
+  animation: confetti-fall linear forwards;
+  border-radius: 2px;
+}
+@keyframes confetti-fall {
+  0%   { transform: translateY(0) rotate(0deg);   opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
 </style>
 </head>
 <body>
 <div id="celebration-overlay"></div>
+
+<!-- ==============================
+     スタート画面
+============================== -->
 <div id="screen-start">
   <div class="start-logo">☁️</div>
-  <div class="start-title"><span>AWS</span> ユースケースクイズ</div>
-  <div class="start-sub">サービスの「組み合わせ」で学ぶ<br>AWSアーキテクチャ入門</div>
+  <div class="start-title"><span class="hl">AWS</span> 逆引きクイズ</div>
+  <div class="start-sub">サービスの組み合わせからユースケースを考える<br>「なぜ？」を理解する AWS 学習アプリ</div>
   <div class="start-stats">
-    <div class="start-stats-num" id="stat-total">0</div>
-    <div class="start-stats-label">問チャレンジ済み</div>
-    <div class="start-stats-row">
-      <div class="start-stats-item"><div class="n" id="stat-correct">0</div><div class="l">正解</div></div>
-      <div class="start-stats-item"><div class="n" id="stat-cards">0</div><div class="l">問題数</div></div>
-      <div class="start-stats-item"><div class="n" id="stat-review">0</div><div class="l">復習待ち</div></div>
+    <div class="stat-main-num" id="stat-total">0</div>
+    <div class="stat-main-label">問チャレンジ済み</div>
+    <div class="stat-row">
+      <div class="stat-item"><div class="n" id="stat-correct">0</div><div class="l">正解</div></div>
+      <div class="stat-item"><div class="n" id="stat-cards">0</div><div class="l">問題数</div></div>
+      <div class="stat-item"><div class="n" id="stat-review">0</div><div class="l">復習待ち</div></div>
     </div>
   </div>
   <button class="btn-start" onclick="startSet()">スタート →</button>
 </div>
-<div id="screen-quiz" style="display:none;flex-direction:column;">
-  <div class="hd">
-    <div class="hd-top">
-      <div class="hd-title">☁️ <span>AWS</span> ユースケースクイズ</div>
-      <div class="hd-qnum" id="hd-qnum">1 / 10</div>
+
+<!-- ==============================
+     クイズ画面
+============================== -->
+<div id="screen-quiz">
+  <div class="quiz-header">
+    <div class="quiz-header-top">
+      <div class="quiz-header-title">☁️ <span class="hl">AWS</span> 逆引きクイズ</div>
+      <div class="quiz-header-num" id="hd-qnum">1 / 5</div>
     </div>
-    <div class="dots" id="dots"></div>
+    <div class="progress-dots" id="progress-dots"></div>
   </div>
-  <main>
-    <div class="usecase-card">
-      <div class="usecase-label">このユースケースに必要なサービスは？</div>
-      <div id="q-level" class="usecase-level level-basic">Basic</div>
-      <div class="usecase-text" id="q-text"></div>
-      <div class="usecase-category" id="q-category"></div>
+  <div class="quiz-body" id="quiz-body">
+    <!-- 問題カード -->
+    <div class="question-card">
+      <div class="question-card-label">この組み合わせで実現できることは？</div>
+      <div class="services-row" id="services-row"></div>
+      <div class="question-meta">
+        <span class="level-badge" id="q-level">Basic</span>
+        <span class="category-badge" id="q-category"></span>
+      </div>
     </div>
+
+    <!-- 選択肢 -->
     <div class="choices" id="choices"></div>
-    <div class="fb fb-correct" id="fb-correct">
-      <div class="fb-title">✅ 正解！</div>
-      <div id="fb-correct-ans"></div>
-      <div class="fb-tip" id="fb-correct-tip"></div>
-      <button class="btn-next" onclick="nextQuestion()" style="margin-top:10px">次へ →</button>
-    </div>
-    <div class="fb fb-wrong" id="fb-wrong">
-      <div class="fb-title">❌ 不正解</div>
-      <div id="fb-wrong-ans"></div>
-      <div class="fb-tip" id="fb-wrong-tip"></div>
+
+    <!-- 解説パネル -->
+    <div class="explanation-panel" id="exp-panel">
+      <div class="exp-header" id="exp-header"></div>
+
+      <div class="exp-section exp-roles">
+        <div class="exp-section-title">各サービスの役割</div>
+        <div id="exp-roles-content"></div>
+      </div>
+
+      <div class="exp-section exp-flow">
+        <div class="exp-section-title">データの流れ</div>
+        <div class="flow-text" id="exp-flow-content"></div>
+      </div>
+
+      <div class="exp-section exp-why">
+        <div class="exp-section-title">なぜこの組み合わせ？</div>
+        <div class="why-text" id="exp-why-content"></div>
+      </div>
+
+      <div class="exp-section exp-tip">
+        <div class="exp-section-title">💡 ポイント</div>
+        <div class="tip-text" id="exp-tip-content"></div>
+      </div>
+
       <button class="btn-next" onclick="nextQuestion()">次へ →</button>
     </div>
-  </main>
+  </div>
 </div>
-<div id="screen-result"></div>
+
+<!-- ==============================
+     結果画面
+============================== -->
+<div id="screen-result">
+  <div class="result-inner" id="result-inner"></div>
+</div>
+
 <script>
-const CARDS=[
-  // ── Basic ──
-  {id:1,level:'basic',category:'サーバーレス',usecase:'サーバーレスな REST API を作りたい',services:['API Gateway','Lambda','DynamoDB'],explanation:'API Gateway でリクエスト受付 → Lambda で処理 → DynamoDB にデータ保存',tip:'管理するサーバーが不要。リクエスト数に応じて自動スケール。'},
-  {id:2,level:'basic',category:'ストレージ',usecase:'静的ウェブサイトを世界中に高速配信したい',services:['S3','CloudFront'],explanation:'S3 に静的ファイルを置き CloudFront（CDN）でエッジ配信',tip:'CloudFront のエッジロケーションが世界中にあり、ユーザーに近い場所から配信。'},
-  {id:3,level:'basic',category:'イベント駆動',usecase:'ファイルをアップロードしたら自動で通知を送りたい',services:['S3','Lambda','SNS'],explanation:'S3 イベント → Lambda でトリガー → SNS で通知配信',tip:'S3のイベント通知でLambdaが自動起動。SNSはメール・SMS・SQSへ同報できる。'},
-  {id:4,level:'basic',category:'コンピューティング',usecase:'複数のサーバーにトラフィックを分散させたい',services:['EC2','ELB'],explanation:'ELB（ロードバランサー）が複数の EC2 インスタンスへ振り分ける',tip:'ELB には ALB（HTTP/HTTPS）・NLB（TCP）・CLB の種類がある。'},
-  {id:5,level:'basic',category:'定期実行',usecase:'毎日深夜に定期的なバッチ処理を実行したい',services:['EventBridge','Lambda'],explanation:'EventBridge のスケジュールルールで Lambda を定期起動',tip:'cron 式でスケジュールを設定。サーバー不要で定期処理が実現できる。'},
-  {id:6,level:'basic',category:'非同期処理',usecase:'メッセージを一時的に溜めて非同期に処理したい',services:['SQS','Lambda'],explanation:'SQS キューにメッセージを積む → Lambda がポーリングして処理',tip:'SQS はバッファとして機能。処理が遅くてもメッセージは失われない。'},
-  {id:7,level:'basic',category:'認証',usecase:'アプリにユーザー認証（ログイン機能）を追加したい',services:['Cognito','API Gateway'],explanation:'Cognito でユーザー管理・認証 → API Gateway でトークン検証',tip:'Cognito User Pool でサインアップ/サインインを管理。JWT トークンで API を保護。'},
-  {id:8,level:'basic',category:'データベース',usecase:'高速なキー・バリュー形式のデータを大量に扱いたい',services:['DynamoDB'],explanation:'DynamoDB はフルマネージドの NoSQL DB。大規模でも一桁ミリ秒の応答。',tip:'スケーリングが自動。RDS と違い結合（JOIN）は苦手。アクセスパターンを先に設計する。'},
-  {id:9,level:'basic',category:'セキュリティ',usecase:'CDN に WAF を組み合わせて攻撃を防ぎたい',services:['CloudFront','WAF'],explanation:'WAF のルールで SQLインジェクションや DDoS などをエッジでブロック',tip:'WAF は CloudFront・ALB・API Gateway にアタッチできる。'},
-  {id:10,level:'basic',category:'ストレージ',usecase:'めったにアクセスしないデータを安く長期保存したい',services:['S3','S3 Glacier'],explanation:'S3 ライフサイクルポリシーで古いオブジェクトを Glacier へ自動移行',tip:'Glacier は S3 より最大90%安い。取り出しに時間がかかる（分〜時間）。'},
-  {id:16,level:'basic',category:'ネットワーク',usecase:'独自ドメインで ALB にルーティングしたい',services:['Route 53','ALB'],explanation:'Route 53 でドメインの DNS 管理 → ALB のエンドポイントへ A レコードで転送',tip:'Route 53 は AWS のマネージド DNS。ヘルスチェックと連携したフェイルオーバーも可能。'},
-  {id:17,level:'basic',category:'セキュリティ',usecase:'AWSリソースへのアクセス権限をユーザー・ロールで管理したい',services:['IAM'],explanation:'IAM ユーザー・グループ・ロールにポリシーをアタッチして権限を制御',tip:'最小権限の原則が基本。EC2 や Lambda には IAM ロールを付与する（アクセスキー不要）。'},
-  {id:18,level:'basic',category:'データベース',usecase:'MySQL/PostgreSQL 互換の RDB をマネージドで使いたい',services:['RDS'],explanation:'RDS はパッチ適用・バックアップ・フェイルオーバーをAWSが管理するマネージドRDB',tip:'Multi-AZ 構成にすると自動フェイルオーバーで高可用性を実現できる。'},
-  {id:19,level:'basic',category:'インフラ管理',usecase:'インフラをコードで定義して再現性を持たせたい（IaC）',services:['CloudFormation'],explanation:'CloudFormation テンプレート（YAML/JSON）でAWSリソースを宣言的に定義・デプロイ',tip:'CDK を使うと TypeScript/Python でテンプレートを生成できる。Amplify も内部で使用。'},
-  {id:20,level:'basic',category:'メール',usecase:'アプリからメールを大量に送信したい',services:['SES','Lambda'],explanation:'Lambda から SES API を呼び出してメール送信。トランザクションメールに最適。',tip:'最初はサンドボックス環境で制限あり。本番利用は申請が必要。'},
-  // ── Intermediate ──
-  {id:11,level:'intermediate',category:'キャッシュ',usecase:'RDS への負荷を減らすためにキャッシュを追加したい',services:['ElastiCache','RDS'],explanation:'ElastiCache（Redis/Memcached）を RDS の前段に配置してクエリ結果をキャッシュ',tip:'同じクエリを何度も DB に投げない。レスポンス速度が劇的に改善する。'},
-  {id:12,level:'intermediate',category:'コンテナ',usecase:'コンテナアプリをサーバー管理なしで実行したい',services:['ECR','ECS Fargate'],explanation:'ECR にイメージを push → ECS Fargate でサーバーレス実行',tip:'Fargate はEC2の管理が不要。コンテナにリソースを割り当てるだけで動く。'},
-  {id:13,level:'intermediate',category:'ワークフロー',usecase:'複数の Lambda を順序通りに制御して処理したい',services:['Step Functions','Lambda'],explanation:'Step Functions のステートマシンで Lambda の実行順・分岐・リトライを制御',tip:'エラーハンドリングやリトライも Step Functions に任せられる。Lambda をシンプルに保てる。'},
-  {id:14,level:'intermediate',category:'ストリーミング',usecase:'IoTデバイスからのデータをリアルタイムに処理したい',services:['Kinesis','Lambda'],explanation:'Kinesis Data Streams でデータを受信 → Lambda でリアルタイム処理',tip:'Kinesis は大量のストリームデータを秒単位で処理できる。'},
-  {id:15,level:'intermediate',category:'監視',usecase:'アラート発火時にメール通知とLambda処理を同時に行いたい',services:['CloudWatch','SNS','Lambda'],explanation:'CloudWatch Alarm → SNS トピック → Lambda とメール通知を同時にトリガー',tip:'SNS を経由することで複数の処理（Lambda・メール・SMS）を並行して発火できるのが強み。'},
-  {id:21,level:'intermediate',category:'監査',usecase:'誰がいつどのAWSリソースを操作したか記録・監査したい',services:['CloudTrail'],explanation:'CloudTrail は全 API コールを記録。S3 に保存して Athena でクエリ可能。',tip:'セキュリティインシデント調査や証跡管理に必須。デフォルトで 90 日間保存される。'},
-  {id:22,level:'intermediate',category:'設定管理',usecase:'DBパスワードや設定値をコードに書かず安全に管理したい',services:['Secrets Manager','Lambda'],explanation:'Secrets Manager に機密情報を保存 → Lambda から API で動的取得',tip:'Secrets Manager は自動ローテーション機能あり。Parameter Store より高機能だがコスト高。'},
-  {id:23,level:'intermediate',category:'AI・ML',usecase:'画像をアップロードしたら自動でAIで内容を解析したい',services:['S3','Lambda','Rekognition'],explanation:'S3 アップロード → Lambda 起動 → Rekognition で物体検出・ラベリング',tip:'Rekognition は顔認識・テキスト抽出・不適切コンテンツ検出なども可能。'},
-  {id:24,level:'intermediate',category:'データベース',usecase:'RDSの読み取り負荷を分散してパフォーマンスを上げたい',services:['Aurora','Read Replica'],explanation:'Aurora のリードレプリカに読み取りクエリを分散し、ライターへの負荷を軽減',tip:'Aurora は MySQL/PostgreSQL 互換で RDS より最大5倍高速。フェイルオーバーも高速。'},
-  // ── Basic Lambda特化 ──
-  {id:28,level:'basic',category:'Lambda',usecase:'API Gateway を使わずに Lambda に直接 HTTPS でアクセスしたい',services:['Lambda Function URLs'],explanation:'Lambda Function URLs を有効化するだけで Lambda に固有の HTTPS エンドポイントが発行される',tip:'API Gatewayが不要なシンプルなユースケース向け。認証は IAM または NONE を選択。2022年リリース。'},
-  {id:29,level:'basic',category:'Lambda',usecase:'複数の Lambda 関数で共通ライブラリや設定ファイルを使い回したい',services:['Lambda Layers'],explanation:'Lambda Layers に共通コードをパッケージして複数の関数からアタッチして再利用',tip:'1つの関数に最大5つのLayerをアタッチ可能。ランタイムのバージョン管理にも使える。'},
-  {id:30,level:'basic',category:'Lambda',usecase:'Lambda の処理が失敗したとき、失敗したイベントを捨てずに保持したい',services:['Lambda','SQS（DLQ）'],explanation:'Lambda に Dead Letter Queue（DLQ）として SQS を設定。失敗したイベントを SQS に送信して後から再処理。',tip:'DLQ は非同期呼び出し（S3イベント・SNSなど）に有効。同期呼び出し（API Gateway）では使えない。'},
-  // ── Intermediate Lambda特化 ──
-  {id:31,level:'intermediate',category:'Lambda',usecase:'Lambda から RDS に大量接続するとコネクションが枯渇してしまう',services:['Lambda','RDS Proxy'],explanation:'RDS Proxy がコネクションプールを管理。Lambda の急増スケールでもDBへの接続数を制御できる',tip:'Lambda はスケールアップのたびに新しいコネクションを張るためRDSを圧迫しやすい。RDS Proxy が間に入ることで解消。'},
-  {id:32,level:'intermediate',category:'Lambda',usecase:'SQS のメッセージをフィルタリング・変換してから Lambda に渡したい',services:['EventBridge Pipes','Lambda'],explanation:'EventBridge Pipes でソース（SQS）→フィルタ→エンリッチメント→ターゲット（Lambda）をノーコードで接続',tip:'EventBridge Pipes は 2022 年リリース。Lambda を書かなくてもイベントの変換・フィルタが可能。'},
-  {id:33,level:'intermediate',category:'Lambda',usecase:'生成AI（LLM）を使ったチャットボットをサーバーレスで作りたい',services:['Lambda','Bedrock'],explanation:'Lambda から Bedrock の API を呼び出してClaude/Titan などの LLM を利用。サーバー管理不要。',tip:'Bedrock は複数のFMを統一APIで呼び出せる。Lambda と組み合わせることでスケーラブルな生成AIアプリを構築できる。'},
-  {id:34,level:'intermediate',category:'Lambda',usecase:'Lambda 関数間で大容量ファイルを共有・永続化したい',services:['Lambda','EFS'],explanation:'Lambda に EFS（Elastic File System）をマウント。関数をまたいだファイルの読み書きが可能。',tip:'ML モデルファイルや一時作業ディレクトリとして使われる。Lambda のデフォルトの /tmp（512MB）より大容量が必要なときに選択。'},
-  // ── Advanced Lambda特化 ──
-  {id:35,level:'advanced',category:'Lambda',usecase:'Java の Lambda でコールドスタートが遅すぎてレスポンスに影響している',services:['Lambda SnapStart'],explanation:'Lambda SnapStart を有効化すると初期化済みのスナップショットから起動し、コールドスタートを最大90%削減',tip:'2022年リリース。Java 11以降で利用可能。スナップショットはバージョン発行時に作成される。'},
-  // ── Advanced ──
-  {id:25,level:'advanced',category:'コンテナ',usecase:'Kubernetes でコンテナを本番スケールで管理したい',services:['EKS','ECR'],explanation:'ECR にコンテナイメージを保管 → EKS（マネージド Kubernetes）でオーケストレーション',tip:'EKS は Kubernetes のコントロールプレーンをAWSが管理。ノードグループは自分で設定する。'},
-  {id:26,level:'advanced',category:'ネットワーク',usecase:'プライベートサブネットのEC2からインターネットに出たい',services:['VPC','NAT Gateway'],explanation:'プライベートサブネット → NAT Gateway（パブリックサブネット）→ インターネット',tip:'NAT Gateway は時間課金＋データ転送料。コスト節約には VPC エンドポイントの活用も検討。'},
-  {id:27,level:'advanced',category:'CI/CD',usecase:'コードをプッシュしたら自動でビルド・テスト・デプロイしたい',services:['CodePipeline','CodeBuild','ECR'],explanation:'CodePipeline がソース→ビルド→デプロイを自動化。CodeBuild でテスト＆イメージビルド。',tip:'GitHub Actions と組み合わせることも可能。ECS/EKS へのデプロイまで自動化できる。'}
+// ==============================
+// サンプルデータ（questions.js が読み込まれない場合のフォールバック）
+// ==============================
+const FALLBACK_QUESTIONS = [
+  {
+    id: 1,
+    level: 'basic',
+    category: 'サーバーレス',
+    services: ['API Gateway', 'Lambda', 'DynamoDB'],
+    usecase: 'サーバーレス REST API を構築し、リクエストを受けてデータを読み書きする',
+    roles: {
+      'API Gateway': 'HTTP リクエストの受口。認証・レート制限を担当',
+      'Lambda':      'ビジネスロジックを実行。サーバー管理不要',
+      'DynamoDB':    'データを永続化。大規模アクセスにも対応'
+    },
+    flow: 'クライアント → API Gateway（受付）→ Lambda（処理）→ DynamoDB（保存）',
+    why:  'この3つを組み合わせることで、サーバーを1台も管理せずにスケーラブルなAPIが作れる。',
+    tip:  'リクエスト数に比例した従量課金。アクセス急増でも自動スケール。'
+  },
+  {
+    id: 2,
+    level: 'basic',
+    category: 'ストレージ',
+    services: ['S3', 'CloudFront'],
+    usecase: '静的ウェブサイトを世界中に低レイテンシで高速配信する',
+    roles: {
+      'S3':          '静的ファイル（HTML・CSS・JS・画像）のオリジン保管場所',
+      'CloudFront':  '世界中のエッジロケーションからコンテンツをキャッシュ配信する CDN'
+    },
+    flow: 'ユーザー → CloudFront エッジ（キャッシュヒット）→ S3 オリジン（キャッシュミス時のみ）',
+    why:  'S3 単体では地理的に遠いユーザーへのレイテンシが大きい。CloudFront が間に入ることでエッジから高速配信できる。',
+    tip:  'CloudFront は HTTPS 対応・DDoS 防御・カスタムドメインにも対応。'
+  },
+  {
+    id: 3,
+    level: 'basic',
+    category: 'イベント駆動',
+    services: ['S3', 'Lambda', 'SNS'],
+    usecase: 'ファイルをアップロードしたら自動で通知を送る',
+    roles: {
+      'S3':     'ファイルのアップロードを受け付け、イベントをトリガー',
+      'Lambda': 'S3 イベントを受けて通知処理を実行。ロジックをコードで記述',
+      'SNS':    'メール・SMS・SQS など複数のエンドポイントへ同時通知'
+    },
+    flow: 'ファイルアップロード → S3 イベント → Lambda 起動 → SNS で通知配信',
+    why:  'サーバーを常時稼働させずに「ファイルが来たら処理する」イベント駆動アーキテクチャを実現できる。',
+    tip:  'SNS は1回の発行で複数のサブスクライバーへ同報できるのが強み。'
+  }
 ];
-const STORAGE_KEY='aws_quiz_data';
-let data=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{"correct":{},"wrong":{},"pendingReview":[],"totalAnswered":0}');
-let currentSet=[],qIndex=0,results=[],autoTimer=null;
-function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
-function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function fmt(s){return s.map((v,i)=>`${v}${i<s.length-1?'<span class="plus">+</span>':''}`).join('');}
-function startSet(){
-  const rev=new Set(data.pendingReview);
-  const reviewCards=shuffle(CARDS.filter(c=>rev.has(c.id)));
-  const basicCards=shuffle(CARDS.filter(c=>c.level==='basic'&&!rev.has(c.id)));
-  const otherCards=shuffle(CARDS.filter(c=>c.level!=='basic'&&!rev.has(c.id)));
-  // 1問目は必ずBasic（復習カードがない場合）
-  const first=basicCards.length>0?basicCards.shift():(reviewCards.shift()||otherCards.shift());
-  const pool=shuffle([...reviewCards,...basicCards,...otherCards]);
-  currentSet=[first,...pool].slice(0,5);
-  qIndex=0;results=[];
-  document.getElementById('screen-start').style.display='none';
-  document.getElementById('screen-result').style.display='none';
-  const q=document.getElementById('screen-quiz');q.style.display='flex';q.style.flexDirection='column';
+
+// ==============================
+// データ初期化
+// ==============================
+const ALL_QUESTIONS = (typeof QUESTIONS !== 'undefined' && Array.isArray(QUESTIONS) && QUESTIONS.length > 0)
+  ? QUESTIONS
+  : FALLBACK_QUESTIONS;
+
+const STORAGE_KEY = 'aws_quiz_v2';
+let appData = JSON.parse(
+  localStorage.getItem(STORAGE_KEY) ||
+  '{"correct":{},"wrong":{},"pendingReview":[],"totalAnswered":0}'
+);
+
+let currentSet = [];
+let qIndex = 0;
+let results = [];
+
+// ==============================
+// ユーティリティ
+// ==============================
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function showScreen(name) {
+  ['screen-start', 'screen-quiz', 'screen-result'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.display = 'none';
+  });
+  const target = document.getElementById('screen-' + name);
+  target.style.display = name === 'quiz' ? 'flex' : (name === 'result' ? 'flex' : 'flex');
+  target.style.flexDirection = 'column';
+}
+
+// ==============================
+// スタート画面
+// ==============================
+function updateStartStats() {
+  document.getElementById('stat-total').textContent = appData.totalAnswered || 0;
+  document.getElementById('stat-correct').textContent =
+    Object.values(appData.correct).reduce((s, v) => s + v, 0);
+  document.getElementById('stat-cards').textContent = ALL_QUESTIONS.length;
+  document.getElementById('stat-review').textContent = (appData.pendingReview || []).length;
+}
+
+// ==============================
+// セット生成
+// ==============================
+function startSet() {
+  const reviewIds = new Set(appData.pendingReview || []);
+  const reviewPool  = shuffle(ALL_QUESTIONS.filter(q => reviewIds.has(q.id)));
+  const normalPool  = shuffle(ALL_QUESTIONS.filter(q => !reviewIds.has(q.id)));
+
+  let picked = [...reviewPool];
+  for (const q of normalPool) {
+    if (picked.length >= 5) break;
+    picked.push(q);
+  }
+  currentSet = shuffle(picked).slice(0, 5);
+  qIndex = 0;
+  results = [];
+
+  showScreen('quiz');
   showQuestion();
 }
-function showQuestion(){
-  if(qIndex>=currentSet.length){showResult();return;}
-  const c=currentSet[qIndex];
-  document.getElementById('hd-qnum').textContent=`${qIndex+1} / ${currentSet.length}`;
-  const lv=document.getElementById('q-level');lv.textContent=c.level.charAt(0).toUpperCase()+c.level.slice(1);lv.className=`usecase-level level-${c.level}`;
-  document.getElementById('q-text').textContent=c.usecase;
-  document.getElementById('q-category').textContent=c.category;
-  const choices=shuffle([c,...shuffle(CARDS.filter(x=>x.id!==c.id)).slice(0,3)]);
-  const ci=choices.indexOf(c);
-  document.getElementById('choices').innerHTML=choices.map((ch,i)=>`<button class="choice" onclick="answer(${i},${ci})" id="choice-${i}"><div class="choice-num">${i+1}</div><div class="choice-services">${fmt(ch.services)}</div></button>`).join('');
-  document.getElementById('fb-correct').classList.remove('show');
-  document.getElementById('fb-wrong').classList.remove('show');
-  updateDots();if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}
-}
-function updateDots(){
-  document.getElementById('dots').innerHTML=currentSet.map((_,i)=>{
-    let cls='dot';if(i<results.length)cls+=results[i]?' done-ok':' done-ng';else if(i===qIndex)cls+=' current';return`<div class="${cls}"></div>`;
+
+// ==============================
+// 問題表示
+// ==============================
+function buildServicesRow(services) {
+  return services.map((s, i) => {
+    const badge = `<span class="service-badge">${s}</span>`;
+    const plus  = i < services.length - 1 ? `<span class="service-plus">+</span>` : '';
+    return badge + plus;
   }).join('');
 }
-function answer(sel,cor){
-  document.querySelectorAll('.choice').forEach(b=>b.classList.add('disabled'));
-  const ok=sel===cor,c=currentSet[qIndex];
-  document.getElementById(`choice-${cor}`).classList.add('correct');
-  if(!ok)document.getElementById(`choice-${sel}`).classList.add('wrong');
-  data.totalAnswered=(data.totalAnswered||0)+1;
-  if(ok){
-    data.correct[c.id]=(data.correct[c.id]||0)+1;
-    data.pendingReview=data.pendingReview.filter(id=>id!==c.id);
-    results.push(true);
-    document.getElementById('fb-correct-ans').innerHTML=`<strong>${fmt(c.services)}</strong>`;
-    document.getElementById('fb-correct-tip').textContent=c.explanation;
-    document.getElementById('fb-correct').classList.add('show');
-    saveData();updateDots();
-  }else{
-    data.wrong[c.id]=(data.wrong[c.id]||0)+1;
-    if(!data.pendingReview.includes(c.id))data.pendingReview.push(c.id);
-    results.push(false);
-    document.getElementById('fb-wrong-ans').innerHTML=`正解：<strong>${fmt(c.services)}</strong>`;
-    document.getElementById('fb-wrong-tip').textContent=c.tip;
-    document.getElementById('fb-wrong').classList.add('show');
-    saveData();updateDots();
+
+function showQuestion() {
+  if (qIndex >= currentSet.length) {
+    showResult();
+    return;
   }
+
+  const q = currentSet[qIndex];
+
+  // ヘッダー
+  document.getElementById('hd-qnum').textContent = `${qIndex + 1} / ${currentSet.length}`;
+  updateDots();
+
+  // 問題カード
+  document.getElementById('services-row').innerHTML = buildServicesRow(q.services);
+  const lv = document.getElementById('q-level');
+  lv.textContent = q.level.charAt(0).toUpperCase() + q.level.slice(1);
+  lv.className = `level-badge level-${q.level}`;
+  document.getElementById('q-category').textContent = q.category;
+
+  // 選択肢生成（正解 + 他のusecase 3つ）
+  const wrongPool = shuffle(ALL_QUESTIONS.filter(x => x.id !== q.id));
+  const distractors = wrongPool.slice(0, 3);
+  const choices = shuffle([q, ...distractors]);
+  const correctIndex = choices.indexOf(q);
+
+  document.getElementById('choices').innerHTML = choices.map((ch, i) => `
+    <button class="choice-btn" onclick="answer(${i}, ${correctIndex})" id="choice-${i}">
+      <div class="choice-num">${i + 1}</div>
+      <div class="choice-text">${escHtml(ch.usecase)}</div>
+    </button>
+  `).join('');
+
+  // 解説パネルを非表示
+  document.getElementById('exp-panel').classList.remove('show');
+
+  // スクロールをトップへ
+  document.getElementById('quiz-body').scrollTop = 0;
 }
-function nextQuestion(){if(autoTimer){clearTimeout(autoTimer);autoTimer=null;}qIndex++;showQuestion();}
-function updateStartStats(){
-  document.getElementById('stat-total').textContent=data.totalAnswered||0;
-  document.getElementById('stat-correct').textContent=Object.values(data.correct).reduce((s,v)=>s+v,0);
-  document.getElementById('stat-cards').textContent=CARDS.length;
-  document.getElementById('stat-review').textContent=(data.pendingReview||[]).length;
+
+function escHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
-function celebrate(score){
-  const o=document.getElementById('celebration-overlay');o.innerHTML='';
-  if(score>=4){launchConfetti(score===5?120:60);const t=document.createElement('div');t.className='celebration-text';t.innerHTML=score===5?'🏆 Perfect! 🏆<br><span style="font-size:1.1rem">全問正解！完璧です！</span>':'🌟 Excellent! 🌟<br><span style="font-size:1.1rem">4問正解！すごい！</span>';t.style.cssText='color:white;background:linear-gradient(135deg,#232f3e,#FF9900);padding:20px 28px;border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,0.3)';document.body.appendChild(t);setTimeout(()=>{t.remove();o.innerHTML='';},3500);}
+
+function updateDots() {
+  document.getElementById('progress-dots').innerHTML = currentSet.map((_, i) => {
+    let cls = 'dot';
+    if (i < results.length) cls += results[i] ? ' done-ok' : ' done-ng';
+    else if (i === qIndex) cls += ' current';
+    return `<div class="${cls}"></div>`;
+  }).join('');
 }
-function launchConfetti(n){
-  const o=document.getElementById('celebration-overlay'),colors=['#FF9900','#232f3e','#059669','#3b82f6','#8b5cf6','#ec4899','#06b6d4'];
-  for(let i=0;i<n;i++){const el=document.createElement('div');el.className='confetti-piece';el.style.cssText=`left:${Math.random()*100}%;top:-10px;background:${colors[Math.floor(Math.random()*colors.length)]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${2+Math.random()*2}s;animation-delay:${Math.random()*1.5}s`;o.appendChild(el);}
-  setTimeout(()=>{o.innerHTML='';},5000);
+
+// ==============================
+// 回答処理
+// ==============================
+function answer(sel, cor) {
+  // すべてのボタンを無効化
+  document.querySelectorAll('.choice-btn').forEach(b => b.classList.add('disabled'));
+  document.getElementById(`choice-${cor}`).classList.add('correct');
+  if (sel !== cor) {
+    document.getElementById(`choice-${sel}`).classList.add('wrong');
+  }
+
+  const ok = sel === cor;
+  const q = currentSet[qIndex];
+
+  // データ更新
+  appData.totalAnswered = (appData.totalAnswered || 0) + 1;
+  if (ok) {
+    appData.correct[q.id] = (appData.correct[q.id] || 0) + 1;
+    appData.pendingReview = (appData.pendingReview || []).filter(id => id !== q.id);
+    results.push(true);
+  } else {
+    appData.wrong[q.id] = (appData.wrong[q.id] || 0) + 1;
+    if (!(appData.pendingReview || []).includes(q.id)) {
+      appData.pendingReview = [...(appData.pendingReview || []), q.id];
+    }
+    results.push(false);
+  }
+  saveData();
+  updateDots();
+
+  // 解説パネルを構築・表示
+  buildExplanation(q, ok);
+
+  // パネルが見えるようスクロール
+  setTimeout(() => {
+    document.getElementById('exp-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 150);
 }
-function showResult(){
-  document.getElementById('screen-quiz').style.display='none';
-  const n=results.filter(Boolean).length,wrong=currentSet.filter((_,i)=>!results[i]);
-  if(n>=4)setTimeout(()=>celebrate(n),400);
-  const emoji=n===5?'🏆':n===4?'🌟':n===3?'🎉':n===2?'👍':'💪';
-  const msg=n===5?'完璧！全問正解！':n===4?'あと1問！惜しい！':n===3?'よくできました！':n===2?'もう一歩！':'復習して完璧にしよう！';
-  const ws=wrong.length>0?`<div style="font-size:0.75rem;font-weight:700;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin:12px 0 6px;align-self:flex-start">復習しよう</div>${wrong.map(c=>`<div class="result-wrong-card"><div class="rwc-usecase">${c.usecase}</div><div class="rwc-answer">→ ${c.services.join(' + ')}</div><div class="rwc-tip">💡 ${c.tip}</div></div>`).join('')}`:'<div style="color:var(--correct);font-weight:700;margin-bottom:16px;text-align:center">🎊 全問正解！完璧です！</div>';
-  const r=document.getElementById('screen-result');
-  r.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;padding:24px 16px;overflow-y:auto;flex:1"><div class="result-emoji">${emoji}</div><div class="result-score">${n} <span style="font-size:1.2rem;color:var(--muted)">/ ${currentSet.length}</span></div><div class="result-sub">${msg}</div>${ws}<button class="btn-start" onclick="goStart()" style="margin-top:16px">もう一度 →</button></div>`;
-  r.style.cssText='display:flex;flex-direction:column;flex:1';updateStartStats();
+
+function buildExplanation(q, ok) {
+  const panel = document.getElementById('exp-panel');
+
+  // ヘッダー
+  const header = document.getElementById('exp-header');
+  if (ok) {
+    header.textContent = '✅ 正解！';
+    header.className = 'exp-header correct-header';
+  } else {
+    header.textContent = '❌ 不正解';
+    header.className = 'exp-header wrong-header';
+  }
+
+  // 各サービスの役割
+  const rolesContent = document.getElementById('exp-roles-content');
+  if (q.roles && typeof q.roles === 'object') {
+    rolesContent.innerHTML = Object.entries(q.roles).map(([svc, desc]) => `
+      <div class="role-item">
+        <span class="role-badge">${escHtml(svc)}</span>
+        <span class="role-desc">${escHtml(desc)}</span>
+      </div>
+    `).join('');
+  } else {
+    // rolesがない場合はservicesをそのまま表示
+    rolesContent.innerHTML = q.services.map(s => `
+      <div class="role-item">
+        <span class="role-badge">${escHtml(s)}</span>
+      </div>
+    `).join('');
+  }
+
+  // データの流れ
+  document.getElementById('exp-flow-content').textContent = q.flow || '—';
+
+  // なぜこの組み合わせ
+  document.getElementById('exp-why-content').textContent = q.why || q.usecase;
+
+  // ポイント
+  document.getElementById('exp-tip-content').textContent = q.tip || '—';
+
+  panel.classList.add('show');
 }
-function goStart(){document.getElementById('screen-result').style.display='none';const s=document.getElementById('screen-start');s.style.display='flex';s.style.flexDirection='column';updateStartStats();}
+
+// ==============================
+// 次の問題へ
+// ==============================
+function nextQuestion() {
+  qIndex++;
+  showQuestion();
+}
+
+// ==============================
+// 結果画面
+// ==============================
+function showResult() {
+  showScreen('result');
+
+  const n = results.filter(Boolean).length;
+  const total = currentSet.length;
+  const wrongItems = currentSet.filter((_, i) => !results[i]);
+
+  if (n >= 4) {
+    setTimeout(() => celebrate(n), 400);
+  }
+
+  const emoji = n === total ? '🏆' : n >= 4 ? '🌟' : n >= 3 ? '🎉' : n >= 2 ? '👍' : '💪';
+  const msg   = n === total ? '完璧！全問正解！' : n >= 4 ? 'あと1問！惜しい！' : n >= 3 ? 'よくできました！' : n >= 2 ? 'もう一歩！' : '復習して完璧にしよう！';
+
+  const wrongHtml = wrongItems.length > 0
+    ? `<div class="result-section-title" style="margin-top:4px">復習しよう</div>
+       ${wrongItems.map(q => `
+         <div class="wrong-card">
+           <div class="wrong-card-label">この組み合わせで…</div>
+           <div class="wrong-card-services">
+             ${q.services.map((s, i) => `
+               <span class="wrong-card-service">${escHtml(s)}</span>
+               ${i < q.services.length - 1 ? '<span class="wrong-card-plus">+</span>' : ''}
+             `).join('')}
+           </div>
+           <div class="wrong-card-usecase">${escHtml(q.usecase)}</div>
+         </div>
+       `).join('')}`
+    : `<div style="color:var(--correct);font-weight:700;text-align:center;margin-bottom:16px">🎊 全問正解！素晴らしい！</div>`;
+
+  document.getElementById('result-inner').innerHTML = `
+    <div class="result-emoji">${emoji}</div>
+    <div class="result-score">${n} <span class="result-score-denom">/ ${total}</span></div>
+    <div class="result-msg">${msg}</div>
+    ${wrongHtml}
+    <button class="btn-start" onclick="goStart()" style="margin-top:16px">もう一度 →</button>
+  `;
+
+  updateStartStats();
+}
+
+function goStart() {
+  showScreen('start');
+  updateStartStats();
+}
+
+// ==============================
+// 初期化
+// ==============================
 updateStartStats();
-if('serviceWorker' in navigator)navigator.serviceWorker.register('/aws-usecase-quiz/service-worker.js');
+
+// ServiceWorker 登録（既存の service-worker.js を使用）
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/aws-usecase-quiz/service-worker.js');
+}
+
+// ==============================
+// Confetti
+// ==============================
+function celebrate(score) {
+  const overlay = document.getElementById('celebration-overlay');
+  overlay.innerHTML = '';
+  launchConfetti(score === 5 ? 120 : 60);
+}
+
+function launchConfetti(n) {
+  const overlay = document.getElementById('celebration-overlay');
+  const colors = ['#FF9900', '#232f3e', '#059669', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4'];
+  for (let i = 0; i < n; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = [
+      `left:${Math.random() * 100}%`,
+      `top:-10px`,
+      `background:${colors[Math.floor(Math.random() * colors.length)]}`,
+      `width:${6 + Math.random() * 8}px`,
+      `height:${6 + Math.random() * 8}px`,
+      `border-radius:${Math.random() > 0.5 ? '50%' : '2px'}`,
+      `animation-duration:${2 + Math.random() * 2}s`,
+      `animation-delay:${Math.random() * 1.5}s`
+    ].join(';');
+    overlay.appendChild(el);
+  }
+  setTimeout(() => { overlay.innerHTML = ''; }, 5000);
+}
 </script>
 </body>
 </html>
